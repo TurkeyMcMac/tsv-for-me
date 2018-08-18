@@ -44,6 +44,7 @@ int main(void)
 		}
 	}
 
+	setvbuf(stdout, NULL, _IOFBF, BUFSIZ);
 	for (size_t i = 0; i < n_columns; ++i) {
 		widths[i] += 2;
 	}
