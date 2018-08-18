@@ -1,3 +1,4 @@
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -124,6 +125,8 @@ ssize_t get_row(FILE *from, struct string *into, size_t max_columns)
 	return item.idx;
 }
 
+size_t get_char_size(char ch);
+
 void item_iter_next(struct item_iter *iter)
 {
 	char ch = iter->line[iter->line_idx];
@@ -137,14 +140,17 @@ void item_iter_next(struct item_iter *iter)
 	} else if (!(ch & 0x80)) {
 		++iter->length;
 	} else {
-		unsigned ch_int =
-			(unsigned)ch << ((sizeof(unsigned) - 1) * 8);
-		size_t ch_length = __builtin_clz(~ch_int);
-		iter->line_idx += ch_length;
+		iter->line_idx += get_char_size(ch);
 		++iter->length;
 		return;
 	}
 	++iter->line_idx;
+}
+
+size_t get_char_size(char ch)
+{
+	unsigned ch_int = (unsigned)ch << ((sizeof(unsigned) - 1) * CHAR_BIT);
+	return __builtin_clz(~ch_int);
 }
 
 int print_row(const struct string *row, const size_t *widths, size_t n_columns)
