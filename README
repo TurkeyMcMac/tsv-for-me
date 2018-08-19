@@ -1,0 +1,20 @@
+Summary:
+TSV For Me is a command for aligning Tab-Separated Values[1]. It should not
+have any trouble aligning unicode in UTF-8.
+
+Usage: tsvfm [options] [file]
+
+  -p <padding>    Sets the minimum number of spaces between
+                  lines to <padding>. The default is 2.
+  -r              Right-align text within the table cells.
+  -s <separator>  Sets the character making up the separator
+                  line to <separator>. The default is '-'.
+  -S              Do not print any separator line.
+  -h              Print this help information and exit.
+  -v              Print version information and exit.
+
+the 'file' parameter indicates which file to read from. If
+left blank, the program reads from standard in.
+
+Links:
+[1]: http://www.iana.org/assignments/media-types/text/tab-separated-values
