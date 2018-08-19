@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <limits.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -5,7 +6,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#define VERSION "1.0.0"
+#define VERSION "1.1.0"
 
 struct string {
 	char *chars;
@@ -27,6 +28,7 @@ int main(int argc, char **argv)
 	size_t conf_padding = 2;
 	bool conf_print_separator = true;
 	char *conf_separator = "-";
+	char *conf_filename;
 	int opt;
 	while ((opt = getopt(argc, argv, "p:s:Shv")) != -1) {
 		switch (opt) {
@@ -50,9 +52,21 @@ int main(int argc, char **argv)
 			exit(1);
 		}
 	}
+	conf_filename = argv[optind];
+	FILE *input;
+	if (conf_filename) {
+		input = fopen(conf_filename, "r");
+		if (!input) {
+			fprintf(stderr, "%s: Could not open file \"%s\": %s\n",
+				argv[0], conf_filename, strerror(errno));
+			exit(1);
+		}
+	} else {
+		input = stdin;
+	}
 	struct string *cells;
 	size_t cell_cap;
-	ssize_t n_columns = get_columns(stdin, &cells, &cell_cap);
+	ssize_t n_columns = get_columns(input, &cells, &cell_cap);
 	if (n_columns < 0) {
 		return 1;
 	}
@@ -64,7 +78,7 @@ int main(int argc, char **argv)
 	ssize_t rowsize;
 	size_t n_cells;
 	for (size_t r = n_columns;
-	     n_cells = r, (rowsize = get_row(stdin, &cells[r], n_columns)) >= 0;
+	     n_cells = r, (rowsize = get_row(input, &cells[r], n_columns)) >= 0;
 	     r += n_columns, fit_row(&cells, &cell_cap, r + n_columns))
 	{
 		for (size_t i = 0; i < rowsize; ++i) {
@@ -92,7 +106,7 @@ int main(int argc, char **argv)
 void print_help(const char *program_name, FILE *to)
 {
 	fprintf(to,
-		"Usage: %s [options]\n"
+		"Usage: %s [options] [file]\n"
 		"\n"
 		"  -p <padding>    Sets the minimum number of spaces between\n"
 		"                  lines to <padding>. The default is 2.\n"
@@ -101,6 +115,9 @@ void print_help(const char *program_name, FILE *to)
 		"  -S              Do not print any separator line.\n"
 		"  -h              Print this help information and exit.\n"
 		"  -v              Print version information and exit.\n"
+		"\n"
+		"the 'file' parameter indicates which file to read from. If\n"
+		"left blank, the program reads from standard in.\n"
 		,
 		program_name
 	);
