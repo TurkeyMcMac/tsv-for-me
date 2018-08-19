@@ -1,0 +1,36 @@
+.TH tsvfm 1 "19 August 2018" "version 1.1.1"
+
+.SH NAME
+tsvfm - Align Tab-Separated Values into columns on the terminal
+
+.SH SYNOPSIS
+\fBtsvfm\fR [\fIoptions\fR] [\fIfile\fR]
+
+.SH DESCRIPTION
+\fBtsvfm\fR reads TSV data from \fIfile\fR or stdin if no file is given, producing nicely aligned data in a table. \fBtsvfm\fR assumes UTF-8 text.
+
+.SH OPTIONS
+
+.IP \fB-p\fR \fIpadding\fR
+Sets the minimum number of spaces between lines to \fIpadding\fR. The default is 2.
+
+.IP \fB-r\fR
+Right-align text within the table cells.
+
+.IP \fB-s\fR \fIseparator\fR
+Sets the character making up the separator line to \fIseparator\fR. The default is '-'.
+
+.IP \fB-S\fR
+Do not print any separator line.
+
+.IP \fB-h\fR
+Print help information and exit.
+
+.IP \fB-h\fR
+Print version information and exit.
+
+.SH SEE ALSO
+The TSV format specification: http://www.iana.org/assignments/media-types/text/tab-separated-values
+
+.SH AUTHOR
+Written by Jude Melton-Houghton (jwmhjwmh@gmail.com).
