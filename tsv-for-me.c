@@ -1,7 +1,9 @@
 #include <limits.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 struct string {
 	char *chars;
@@ -14,10 +16,35 @@ void fit_row(struct string **cells, size_t *capacity, size_t grow_to);
 ssize_t get_row(FILE *from, struct string *into, size_t max_columns);
 #define MAX(a, b) ( a > b ? a : b )
 int print_row(const struct string *row, const size_t *widths, size_t n_columns);
-int print_separator(const size_t *widths, size_t n_columns);
+int print_separator(const size_t *widths, size_t n_columns, const char *seg);
 
-int main(void)
+int main(int argc, char **argv)
 {
+	size_t conf_padding = 2;
+	bool conf_print_separator = true;
+	char *conf_separator = "-";
+	int opt;
+	while ((opt = getopt(argc, argv, "p:s:Shv")) != -1) {
+		switch (opt) {
+		case 'p':
+			conf_padding = atoi(optarg);
+			break;
+		case 's':
+			conf_separator = optarg;
+			break;
+		case 'S':
+			conf_print_separator = false;
+			break;
+		case 'h':
+			printf("Help information.\n");
+			exit(0);
+		case 'v':
+			printf("Version information.\n");
+			exit(0);
+		default:
+			exit(1);
+		}
+	}
 	struct string *cells;
 	size_t cell_cap;
 	ssize_t n_columns = get_columns(stdin, &cells, &cell_cap);
@@ -46,10 +73,12 @@ int main(void)
 
 	setvbuf(stdout, NULL, _IOFBF, BUFSIZ);
 	for (size_t i = 0; i < n_columns; ++i) {
-		widths[i] += 2;
+		widths[i] += conf_padding;
 	}
 	print_row(cells, widths, n_columns);
-	print_separator(widths, n_columns);
+	if (conf_print_separator) {
+		print_separator(widths, n_columns, conf_separator);
+	}
 	for (size_t r = n_columns; r < n_cells; r += n_columns) {
 		print_row(&cells[r], widths, n_columns);
 	}
@@ -164,14 +193,30 @@ int print_row(const struct string *row, const size_t *widths, size_t n_columns)
 	return 0;
 }
 
-int print_separator(const size_t *widths, size_t n_columns)
+int print_separator(const size_t *widths, size_t n_columns, const char *segment)
 {
 	size_t total_width = 0;
 	for (size_t i = 0; i < n_columns; ++i) {
 		total_width += widths[i];
 	}
-	char *buf = malloc(total_width + 1);
-	memset(buf, '-', total_width);
+	size_t seg_length = strlen(segment);
+	char *buf;
+	if (seg_length <= 1) {
+		buf = malloc(total_width + 1);
+		memset(buf, segment[0], total_width);
+	} else if (total_width > 0) {
+		total_width *= seg_length;
+		buf = malloc(total_width + 1);
+		memcpy(buf, segment, seg_length);
+		size_t write_head = seg_length;
+		while (write_head * 2 < total_width) {
+			memcpy(buf + write_head, buf, write_head);
+			write_head *= 2;
+		}
+		memcpy(buf + write_head, buf, total_width - write_head);
+	} else {
+		return 0;
+	}
 	buf[total_width] = '\0';
 	printf("%s\n", buf);
 	free(buf);
