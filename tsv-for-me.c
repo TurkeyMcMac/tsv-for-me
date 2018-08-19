@@ -5,11 +5,15 @@
 #include <string.h>
 #include <unistd.h>
 
+#define VERSION "1.0.0"
+
 struct string {
 	char *chars;
 	size_t length;
 };
 
+void print_help(const char *program_name, FILE *to);
+void print_version(const char *program_name, FILE *to);
 ssize_t get_columns(FILE *from, struct string **into, size_t *capacity);
 void get_widths(const struct string *from, size_t *into, size_t n_columns);
 void fit_row(struct string **cells, size_t *capacity, size_t grow_to);
@@ -36,12 +40,13 @@ int main(int argc, char **argv)
 			conf_print_separator = false;
 			break;
 		case 'h':
-			printf("Help information.\n");
+			print_help(argv[0], stdout);
 			exit(0);
 		case 'v':
-			printf("Version information.\n");
+			print_version(argv[0], stdout);
 			exit(0);
 		default:
+			print_help(argv[0], stderr);
 			exit(1);
 		}
 	}
@@ -82,6 +87,28 @@ int main(int argc, char **argv)
 	for (size_t r = n_columns; r < n_cells; r += n_columns) {
 		print_row(&cells[r], widths, n_columns);
 	}
+}
+
+void print_help(const char *program_name, FILE *to)
+{
+	fprintf(to,
+		"Usage: %s [options]\n"
+		"\n"
+		"  -p <padding>    Sets the minimum number of spaces between\n"
+		"                  lines to <padding>. The default is 2.\n"
+		"  -s <separator>  Sets the character making up the separator\n"
+		"                  line to <separator>. The default is '-'.\n"
+		"  -S              Do not print any separator line.\n"
+		"  -h              Print this help information and exit.\n"
+		"  -v              Print version information and exit.\n"
+		,
+		program_name
+	);
+}
+
+void print_version(const char *program_name, FILE *to)
+{
+	fprintf(to, "%s "VERSION"\n", program_name);
 }
 
 struct item_iter {
