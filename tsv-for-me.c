@@ -6,8 +6,6 @@
 #include <string.h>
 #include <unistd.h>
 
-#define VERSION "1.1.0"
-
 struct string {
 	char *chars;
 	size_t length;
