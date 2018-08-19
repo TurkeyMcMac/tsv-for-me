@@ -23,6 +23,7 @@ int print_separator(const size_t *widths, size_t n_columns, const char *seg);
 
 int main(int argc, char **argv)
 {
+	// Argument parsing
 	size_t conf_padding = 2;
 	bool conf_print_separator = true;
 	char *conf_separator = "-";
@@ -51,6 +52,8 @@ int main(int argc, char **argv)
 		}
 	}
 	conf_filename = argv[optind];
+
+	// Input location
 	FILE *input;
 	if (conf_filename) {
 		input = fopen(conf_filename, "r");
@@ -62,6 +65,8 @@ int main(int argc, char **argv)
 	} else {
 		input = stdin;
 	}
+
+	// Column width calculation
 	struct string *cells;
 	size_t cell_cap;
 	ssize_t n_columns = get_columns(input, &cells, &cell_cap);
@@ -70,7 +75,6 @@ int main(int argc, char **argv)
 	}
 	size_t *widths = malloc(n_columns * sizeof(*widths));
 	get_widths(cells, widths, n_columns);
-
 	fit_row(&cells, &cell_cap, n_columns * 2);
 	struct string empty_string = {"", 0};
 	ssize_t rowsize;
@@ -88,6 +92,7 @@ int main(int argc, char **argv)
 		}
 	}
 
+	// Table printing
 	setvbuf(stdout, NULL, _IOFBF, BUFSIZ);
 	for (size_t i = 0; i < n_columns; ++i) {
 		widths[i] += conf_padding;
