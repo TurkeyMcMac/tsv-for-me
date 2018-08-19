@@ -16,5 +16,22 @@ Usage: tsvfm [options] [file]
 the 'file' parameter indicates which file to read from. If
 left blank, the program reads from standard in.
 
+Example:
+
+File "example.tsv":
+
+	Last Name	First Name	Favorite Color
+	Smith	Jill	teal
+	O'Reilly	Simon	brown
+	Miller	Maxwell	extremely pale pink
+
+Output of "tsvfm example.tsv":
+
+	Last Name  First Name  Favorite Color       
+	--------------------------------------------
+	Smith      Jill        teal                 
+	O'Reilly   Simon       brown                
+	Miller     Maxwell     extremely pale pink  
+
 Links:
 [1]: http://www.iana.org/assignments/media-types/text/tab-separated-values
