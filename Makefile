@@ -1,5 +1,5 @@
 name = tsvfm
-version = 1.1.0
+version = 1.1.1
 flags = -O3 -Wall $(CFLAGS)
 
 $(name): tsv-for-me.c

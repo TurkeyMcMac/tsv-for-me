@@ -91,18 +91,34 @@ int main(int argc, char **argv)
 			++rowsize;
 		}
 	}
+	if (!feof(input)) {
+		fprintf(stderr, "%s: Failed to read input: %s\n",
+			argv[0], strerror(errno));
+	}
 
 	// Table printing
 	setvbuf(stdout, NULL, _IOFBF, BUFSIZ);
 	for (size_t i = 0; i < n_columns; ++i) {
 		widths[i] += conf_padding;
 	}
-	print_row(cells, widths, n_columns);
-	if (conf_print_separator) {
-		print_separator(widths, n_columns, conf_separator);
+	if (print_row(cells, widths, n_columns)) {
+		fprintf(stderr, "%s: Failed to print column names: %s\n",
+			argv[0], strerror(errno));
+		exit(1);
+	}
+	if (conf_print_separator
+	 && print_separator(widths, n_columns, conf_separator))
+	{
+		fprintf(stderr, "%s: Failed to print separator: %s\n",
+			argv[0], strerror(errno));
+		exit(1);
 	}
 	for (size_t r = n_columns; r < n_cells; r += n_columns) {
-		print_row(&cells[r], widths, n_columns);
+		if (print_row(&cells[r], widths, n_columns)) {
+			fprintf(stderr, "%s: Failed to print row: %s\n",
+				argv[0], strerror(errno));
+			exit(1);
+		}
 	}
 }
 
@@ -233,11 +249,17 @@ size_t get_char_size(char ch)
 int print_row(const struct string *row, const size_t *widths, size_t n_columns)
 {
 	for (size_t i = 0; i < n_columns; ++i) {
-		printf("%s%*s",
-			row[i].chars, (int)(widths[i] - row[i].length), "");
+		if (printf("%s%*s",
+			row[i].chars, (int)(widths[i] - row[i].length), "") < 0)
+		{
+			return -1;
+		}
 	}
-	printf("\n");
-	return 0;
+	if (printf("\n") < 0) {
+		return -1;
+	} else {
+		return 0;
+	}
 }
 
 int print_separator(const size_t *widths, size_t n_columns, const char *segment)
@@ -265,7 +287,10 @@ int print_separator(const size_t *widths, size_t n_columns, const char *segment)
 		return 0;
 	}
 	buf[total_width] = '\0';
-	printf("%s\n", buf);
+	int status = 0;
+	if (printf("%s\n", buf) < 0) {
+		status = -1;
+	}
 	free(buf);
-	return 0;
+	return status;
 }
