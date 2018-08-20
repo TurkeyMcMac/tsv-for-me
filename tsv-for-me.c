@@ -24,6 +24,7 @@ int print_separator(const size_t *widths, size_t n_columns, const char *seg);
 
 int main(int argc, char **argv)
 {
+	int exit_status = EXIT_SUCCESS;
 	// Argument parsing
 	size_t conf_padding = 2;
 	bool conf_right_align = false;
@@ -47,13 +48,13 @@ int main(int argc, char **argv)
 			break;
 		case 'h':
 			print_help(argv[0], stdout);
-			return 0;
+			return exit_status;
 		case 'v':
 			print_version(argv[0], stdout);
-			return 0;
+			return exit_status;
 		default:
 			print_help(argv[0], stderr);
-			return 1;
+			return EXIT_FAILURE;
 		}
 	}
 	conf_filename = argv[optind];
@@ -65,7 +66,7 @@ int main(int argc, char **argv)
 		if (!input) {
 			fprintf(stderr, "%s: Could not open file \"%s\": %s\n",
 				argv[0], conf_filename, strerror(errno));
-			return 1;
+			return EXIT_FAILURE;
 		}
 	} else {
 		input = stdin;
@@ -76,7 +77,7 @@ int main(int argc, char **argv)
 	size_t cell_cap;
 	ssize_t n_columns = get_columns(input, &cells, &cell_cap);
 	if (n_columns < 0) {
-		return 1;
+		return EXIT_FAILURE;
 	}
 	size_t *widths = malloc(n_columns * sizeof(*widths));
 	get_widths(cells, widths, n_columns);
@@ -99,6 +100,7 @@ int main(int argc, char **argv)
 	if (!feof(input)) {
 		fprintf(stderr, "%s: Failed to read input: %s\n",
 			argv[0], strerror(errno));
+		exit_status = EXIT_FAILURE;
 	}
 
 	// Table printing
@@ -109,22 +111,24 @@ int main(int argc, char **argv)
 	if (print_row(cells, widths, n_columns, conf_right_align)) {
 		fprintf(stderr, "%s: Failed to print column names: %s\n",
 			argv[0], strerror(errno));
-		return 1;
+		return EXIT_FAILURE;
 	}
 	if (conf_print_separator
 	 && print_separator(widths, n_columns, conf_separator))
 	{
 		fprintf(stderr, "%s: Failed to print separator: %s\n",
 			argv[0], strerror(errno));
-		return 1;
+		return EXIT_FAILURE;
 	}
 	for (size_t r = n_columns; r < n_cells; r += n_columns) {
 		if (print_row(&cells[r], widths, n_columns, conf_right_align)) {
 			fprintf(stderr, "%s: Failed to print row: %s\n",
 				argv[0], strerror(errno));
-			return 1;
+			return EXIT_FAILURE;
 		}
 	}
+
+	return exit_status;
 }
 
 void print_help(const char *program_name, FILE *to)
