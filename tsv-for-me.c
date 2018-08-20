@@ -47,13 +47,13 @@ int main(int argc, char **argv)
 			break;
 		case 'h':
 			print_help(argv[0], stdout);
-			exit(0);
+			return 0;
 		case 'v':
 			print_version(argv[0], stdout);
-			exit(0);
+			return 0;
 		default:
 			print_help(argv[0], stderr);
-			exit(1);
+			return 1;
 		}
 	}
 	conf_filename = argv[optind];
@@ -65,7 +65,7 @@ int main(int argc, char **argv)
 		if (!input) {
 			fprintf(stderr, "%s: Could not open file \"%s\": %s\n",
 				argv[0], conf_filename, strerror(errno));
-			exit(1);
+			return 1;
 		}
 	} else {
 		input = stdin;
@@ -109,20 +109,20 @@ int main(int argc, char **argv)
 	if (print_row(cells, widths, n_columns, conf_right_align)) {
 		fprintf(stderr, "%s: Failed to print column names: %s\n",
 			argv[0], strerror(errno));
-		exit(1);
+		return 1;
 	}
 	if (conf_print_separator
 	 && print_separator(widths, n_columns, conf_separator))
 	{
 		fprintf(stderr, "%s: Failed to print separator: %s\n",
 			argv[0], strerror(errno));
-		exit(1);
+		return 1;
 	}
 	for (size_t r = n_columns; r < n_cells; r += n_columns) {
 		if (print_row(&cells[r], widths, n_columns, conf_right_align)) {
 			fprintf(stderr, "%s: Failed to print row: %s\n",
 				argv[0], strerror(errno));
-			exit(1);
+			return 1;
 		}
 	}
 }
