@@ -26,6 +26,9 @@ USAGE: tsvfm [options] [file]
 the 'file' parameter indicates which file to read from. If
 left blank, the program reads from standard in.
 
+With wide tables, it might be a good idea to pipe the output into `less -S`.
+This will keep long lines from wrapping around to the beginning.
+
 EXAMPLE:
 
 File "example.tsv":
