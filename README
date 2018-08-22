@@ -1,3 +1,14 @@
+Installation:
+Just run the following command:
+
+make install
+
+to install the binary and the man page. I know this works as-is on Ubuntu, but
+on other operating systems it might be necessary to use the following form:
+
+make install bin=<bin path> man=<man path>
+
+
 Summary:
 TSV For Me is a command for aligning Tab-Separated Values[1]. It should not
 have any trouble aligning unicode in UTF-8.
