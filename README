@@ -1,4 +1,4 @@
-Installation:
+INSTALLATION:
 Just run the following command:
 
 make install
@@ -8,12 +8,11 @@ on other operating systems it might be necessary to use the following form:
 
 make install bin=<bin path> man=<man path>
 
-
-Summary:
+SUMMARY:
 TSV For Me is a command for aligning Tab-Separated Values[1]. It should not
 have any trouble aligning unicode in UTF-8.
 
-Usage: tsvfm [options] [file]
+USAGE: tsvfm [options] [file]
 
   -p <padding>    Sets the minimum number of spaces between
                   lines to <padding>. The default is 2.
@@ -27,7 +26,7 @@ Usage: tsvfm [options] [file]
 the 'file' parameter indicates which file to read from. If
 left blank, the program reads from standard in.
 
-Example:
+EXAMPLE:
 
 File "example.tsv":
 
@@ -44,5 +43,5 @@ Output of "tsvfm example.tsv":
 	O'Reilly   Simon       brown                
 	Miller     Maxwell     extremely pale pink  
 
-Links:
+LINKS:
 [1]: http://www.iana.org/assignments/media-types/text/tab-separated-values
