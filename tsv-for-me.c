@@ -11,16 +11,18 @@ struct string {
 	size_t length;
 };
 
-void print_help(const char *program_name, FILE *to);
-void print_version(const char *program_name, FILE *to);
-ssize_t get_columns(FILE *from, struct string **into, size_t *capacity);
-void get_widths(const struct string *from, size_t *into, size_t n_columns);
-void fit_row(struct string **cells, size_t *capacity, size_t grow_to);
-ssize_t get_row(FILE *from, struct string *into, size_t max_columns);
+static void print_help(const char *program_name, FILE *to);
+static void print_version(const char *program_name, FILE *to);
+static ssize_t get_columns(FILE *from, struct string **into, size_t *capacity);
+static void get_widths(const struct string *from, size_t *into,
+	size_t n_columns);
+static void fit_row(struct string **cells, size_t *capacity, size_t grow_to);
+static ssize_t get_row(FILE *from, struct string *into, size_t max_columns);
 #define MAX(a, b) ( a > b ? a : b )
-int print_row(const struct string *row, const size_t *widths, size_t n_columns,
-	bool align_right);
-int print_separator(const size_t *widths, size_t n_columns, const char *seg);
+static int print_row(const struct string *row, const size_t *widths,
+	size_t n_columns, bool align_right);
+static int print_separator(const size_t *widths, size_t n_columns,
+	const char *seg);
 
 int main(int argc, char **argv)
 {
@@ -131,7 +133,7 @@ int main(int argc, char **argv)
 	return exit_status;
 }
 
-void print_help(const char *program_name, FILE *to)
+static void print_help(const char *program_name, FILE *to)
 {
 	fprintf(to,
 		"Usage: %s [options] [file]\n"
@@ -152,7 +154,7 @@ void print_help(const char *program_name, FILE *to)
 	);
 }
 
-void print_version(const char *program_name, FILE *to)
+static void print_version(const char *program_name, FILE *to)
 {
 	fprintf(to, "%s "VERSION"\n", program_name);
 }
@@ -175,9 +177,9 @@ struct item_iter {
 	.into = (into_)							\
 }
 
-void item_iter_next(struct item_iter *iter);
+static void item_iter_next(struct item_iter *iter);
 
-ssize_t get_columns(FILE *from, struct string **into, size_t *capacity)
+static ssize_t get_columns(FILE *from, struct string **into, size_t *capacity)
 {
 	char *line = NULL;
 	size_t line_capacity = 0;
@@ -195,14 +197,15 @@ ssize_t get_columns(FILE *from, struct string **into, size_t *capacity)
 	return item.idx;
 }
 
-void get_widths(const struct string *from, size_t *into, size_t n_columns)
+static void get_widths(const struct string *from, size_t *into,
+	size_t n_columns)
 {
 	while (n_columns--) {
 		into[n_columns] = from[n_columns].length;
 	}
 }
 
-void fit_row(struct string **cells, size_t *capacity, size_t grow_to)
+static void fit_row(struct string **cells, size_t *capacity, size_t grow_to)
 {
 	if (grow_to * sizeof(**cells) <= *capacity) {
 		return;
@@ -212,7 +215,7 @@ void fit_row(struct string **cells, size_t *capacity, size_t grow_to)
 	*cells = new_cells;
 }
 
-ssize_t get_row(FILE *from, struct string *into, size_t max_columns)
+static ssize_t get_row(FILE *from, struct string *into, size_t max_columns)
 {
 	char *line = NULL;
 	size_t line_capacity = 0;
@@ -228,9 +231,9 @@ ssize_t get_row(FILE *from, struct string *into, size_t max_columns)
 	return item.idx;
 }
 
-size_t get_char_size(char ch);
+static size_t get_char_size(char ch);
 
-void item_iter_next(struct item_iter *iter)
+static void item_iter_next(struct item_iter *iter)
 {
 	char ch = iter->line[iter->line_idx];
 	if (ch == '\t' || ch == '\n') {
@@ -250,17 +253,17 @@ void item_iter_next(struct item_iter *iter)
 	++iter->line_idx;
 }
 
-size_t get_char_size(char ch)
+static size_t get_char_size(char ch)
 {
 	unsigned ch_int = (unsigned)ch << ((sizeof(unsigned) - 1) * CHAR_BIT);
 	return __builtin_clz(~ch_int);
 }
 
-int print_pad_right(const char *chars, size_t padding);
-int print_pad_left(const char *chars, size_t padding);
+static int print_pad_right(const char *chars, size_t padding);
+static int print_pad_left(const char *chars, size_t padding);
 
-int print_row(const struct string *row, const size_t *widths, size_t n_columns,
-	bool align_right)
+static int print_row(const struct string *row, const size_t *widths,
+	size_t n_columns, bool align_right)
 {
 	int (*f_print)(const char *, size_t) = print_pad_right;
 	if (align_right) {
@@ -279,17 +282,18 @@ int print_row(const struct string *row, const size_t *widths, size_t n_columns,
 	}
 }
 
-int print_pad_right(const char *chars, size_t padding)
+static int print_pad_right(const char *chars, size_t padding)
 {
 	return printf("%s%*s", chars, (int)padding, "");
 }
 
-int print_pad_left(const char *chars, size_t padding)
+static int print_pad_left(const char *chars, size_t padding)
 {
 	return printf("%*s%s", (int)padding, "", chars);
 }
 
-int print_separator(const size_t *widths, size_t n_columns, const char *segment)
+static int print_separator(const size_t *widths, size_t n_columns,
+	const char *segment)
 {
 	size_t total_width = 0;
 	for (size_t i = 0; i < n_columns; ++i) {
