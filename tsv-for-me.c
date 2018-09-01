@@ -17,7 +17,10 @@ static ssize_t get_columns(FILE *from, struct string **into, size_t *capacity);
 static void get_widths(const struct string *from, size_t *into,
 	size_t n_columns);
 static void fit_row(struct string **cells, size_t *capacity, size_t grow_to);
-static ssize_t get_row(FILE *from, struct string *into, size_t max_columns);
+static ssize_t get_row(FILE *from, struct string *into, size_t max_columns,
+	bool no_overflow);
+static void report_bad_line(const char *prog_name, const char *descriptor,
+	size_t item_index, size_t n_columns);
 #define MAX(a, b) ( a > b ? a : b )
 static int print_row(const struct string *row, const size_t *widths,
 	size_t n_columns, bool align_right);
@@ -26,15 +29,15 @@ static int print_separator(const size_t *widths, size_t n_columns,
 
 int main(int argc, char **argv)
 {
-	int exit_status = EXIT_SUCCESS;
 	// Argument parsing
 	size_t conf_padding = 2;
 	bool conf_right_align = false;
 	bool conf_print_separator = true;
+	bool conf_lax_lines = false;
 	char *conf_separator = "-";
 	char *conf_filename;
 	int opt;
-	while ((opt = getopt(argc, argv, "p:rs:Shv")) != -1) {
+	while ((opt = getopt(argc, argv, "p:rs:Slhv")) != -1) {
 		switch (opt) {
 		case 'p':
 			conf_padding = atoi(optarg);
@@ -48,12 +51,15 @@ int main(int argc, char **argv)
 		case 'S':
 			conf_print_separator = false;
 			break;
+		case 'l':
+			conf_lax_lines = true;
+			break;
 		case 'h':
 			print_help(argv[0], stdout);
-			return exit_status;
+			return EXIT_SUCCESS;
 		case 'v':
 			print_version(argv[0], stdout);
-			return exit_status;
+			return EXIT_SUCCESS;
 		default:
 			print_help(argv[0], stderr);
 			return EXIT_FAILURE;
@@ -87,22 +93,35 @@ int main(int argc, char **argv)
 	struct string empty_string = {"", 0};
 	ssize_t rowsize;
 	size_t n_cells;
-	for (size_t r = n_columns;
-	     n_cells = r, (rowsize = get_row(input, &cells[r], n_columns)) >= 0;
+	size_t r;
+	for (r = n_columns;
+	     n_cells = r, (rowsize =
+	     	get_row(input, &cells[r], n_columns, !conf_lax_lines)) >= 0;
 	     r += n_columns, fit_row(&cells, &cell_cap, r + n_columns))
 	{
 		for (size_t i = 0; i < rowsize; ++i) {
 			widths[i] = MAX(widths[i], cells[r + i].length);
 		}
-		while (rowsize < n_columns) {
-			cells[r + rowsize] = empty_string;
-			++rowsize;
+		if (rowsize < n_columns) {
+			if (conf_lax_lines) {
+				do {
+					cells[r + rowsize] = empty_string;
+					++rowsize;
+				} while (rowsize < n_columns);
+			} else {
+				report_bad_line(argv[0], "short", r, n_columns);
+				exit(EXIT_FAILURE);
+			}
 		}
 	}
 	if (!feof(input)) {
-		fprintf(stderr, "%s: Failed to read input: %s\n",
-			argv[0], strerror(errno));
-		exit_status = EXIT_FAILURE;
+		if (errno == EOVERFLOW) {
+			report_bad_line(argv[0], "long", r, n_columns);
+		} else {
+			fprintf(stderr, "%s: Failed to read input: %s\n",
+				argv[0], strerror(errno));
+		}
+		return EXIT_FAILURE;
 	}
 
 	// Table printing
@@ -130,7 +149,7 @@ int main(int argc, char **argv)
 		}
 	}
 
-	return exit_status;
+	return EXIT_SUCCESS;
 }
 
 static void print_help(const char *program_name, FILE *to)
@@ -144,6 +163,9 @@ static void print_help(const char *program_name, FILE *to)
 		"  -s <separator>  Sets the character making up the separator\n"
 		"                  line to <separator>. The default is '-'.\n"
 		"  -S              Do not print any separator line.\n"
+		"  -l              Use lax line length handling. With this\n"
+		"                  enabled, short lines are filled with empty\n"
+		"                  cells and long lines have cells trimmed.\n"
 		"  -h              Print this help information and exit.\n"
 		"  -v              Print version information and exit.\n"
 		"\n"
@@ -215,7 +237,8 @@ static void fit_row(struct string **cells, size_t *capacity, size_t grow_to)
 	*cells = new_cells;
 }
 
-static ssize_t get_row(FILE *from, struct string *into, size_t max_columns)
+static ssize_t get_row(FILE *from, struct string *into, size_t max_columns,
+	bool no_overflow)
 {
 	char *line = NULL;
 	size_t line_capacity = 0;
@@ -225,10 +248,25 @@ static ssize_t get_row(FILE *from, struct string *into, size_t max_columns)
 		return -1;
 	}
 	struct item_iter item = ITEM_ITER(line, into);
-	while (item.line_idx < line_length && item.idx < max_columns) {
-		item_iter_next(&item);
+	while (item.line_idx < line_length) {
+		if (item.idx < max_columns) {
+			item_iter_next(&item);
+		} else if (no_overflow) {
+			errno = EOVERFLOW;
+			return -1;
+		} else {
+			break;
+		}
 	}
+
 	return item.idx;
+}
+
+static void report_bad_line(const char *prog_name, const char *descriptor,
+	size_t item_index, size_t n_columns)
+{
+	fprintf(stderr, "%s: Line %lu of input too %s\n",
+		prog_name, item_index / n_columns + 1, descriptor);
 }
 
 static size_t get_char_size(char ch);

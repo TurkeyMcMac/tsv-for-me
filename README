@@ -20,6 +20,9 @@ USAGE: tsvfm [options] [file]
   -s <separator>  Sets the character making up the separator
                   line to <separator>. The default is '-'.
   -S              Do not print any separator line.
+  -l              Use lax line length handling. With this
+                  enabled, short lines are filled with empty
+                  cells and long lines have cells trimmed.
   -h              Print this help information and exit.
   -v              Print version information and exit.
 
