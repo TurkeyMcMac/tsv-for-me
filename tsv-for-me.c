@@ -273,20 +273,54 @@ static size_t get_char_size(char ch);
 
 static void item_iter_next(struct item_iter *iter)
 {
-	char ch = iter->line[iter->line_idx];
-	if (ch == '\t' || ch == '\n') {
+	unsigned char ch = iter->line[iter->line_idx], next_ch, next_next_ch;
+
+	switch (ch) {
+	case 0xC2:
+		next_ch = iter->line[iter->line_idx + 1];
+		if (next_ch == 0x85) {
+			// Character: NEXT LINE
+			iter->line[iter->line_idx] = '\0';
+			++iter->line_idx;
+			goto advance_line;
+		}
+		break;
+	case 0xE2:
+		next_ch = iter->line[iter->line_idx + 1];
+		next_next_ch = iter->line[iter->line_idx + 2];
+		if (next_ch == 0x80
+		&& (next_next_ch == 0xA8 || next_next_ch == 0xA9)) {
+			// Character: LINE SEPARATOR or PARAGRAPH SEPARATOR
+			iter->line[iter->line_idx] = '\0';
+			iter->line_idx += 2;
+			goto advance_line;
+		}
+	case '\n':
+		iter->line[iter->line_idx] = '\0';
+		next_ch = iter->line[iter->line_idx + 1];
+		if (next_ch == '\r') {
+			++iter->line_idx;
+		}
+		goto advance_line;
+	case '\f': case '\r': case '\t': case '\v':
+		iter->line[iter->line_idx] = '\0';
+		// FALLTHROUGH
+	advance_line:
 		iter->into[iter->idx].chars = &iter->line[iter->base];
 		iter->into[iter->idx].length = iter->length;
 		iter->length = 0;
 		iter->base = iter->line_idx + 1;
 		++iter->idx;
-		iter->line[iter->line_idx] = '\0';
-	} else if (!(ch & 0x80)) {
-		++iter->length;
-	} else {
-		iter->line_idx += get_char_size(ch);
-		++iter->length;
-		return;
+		break;
+	default:
+		if (!(ch & 0x80)) {
+			++iter->length;
+		} else {
+			iter->line_idx += get_char_size(ch);
+			++iter->length;
+			return;
+		}
+		break;
 	}
 	++iter->line_idx;
 }
