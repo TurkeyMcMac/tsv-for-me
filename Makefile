@@ -1,5 +1,5 @@
 name = tsvfm
-version = 1.2.2
+version = 1.2.3
 flags = -O3 -Wall $(CFLAGS)
 bin = ~/bin
 man = /usr/local/man/man1

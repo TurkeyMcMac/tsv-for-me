@@ -26,6 +26,7 @@ static int print_row(const struct string *row, const size_t *widths,
 	size_t n_columns, bool align_right);
 static int print_separator(const size_t *widths, size_t n_columns,
 	const char *seg);
+static void free_row(struct string *row);
 
 int main(int argc, char **argv)
 {
@@ -147,6 +148,7 @@ int main(int argc, char **argv)
 				argv[0], strerror(errno));
 			return EXIT_FAILURE;
 		}
+		free_row(&cells[r]);
 	}
 
 	return EXIT_SUCCESS;
@@ -396,4 +398,9 @@ static int print_separator(const size_t *widths, size_t n_columns,
 	}
 	free(buf);
 	return status;
+}
+
+static void free_row(struct string *row)
+{
+	free(row[0].chars);
 }
